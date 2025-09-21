@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>EEG Tutor — Basic (No Backend)</title>
+<meta name="description" content="A lightweight EEG tutoring app: bands, 10–20 map, artifacts, quiz, and Wikipedia lookups. Pure frontend, no backend.">
+<style>
+  :root{--bg:#0f1115;--card:#151923;--text:#e6e9ef;--muted:#9aa4b2;--accent:#54d6a1;--border:#242a36}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Inter,Roboto,Ubuntu,Helvetica,Arial,sans-serif}
+  a{color:var(--accent);text-decoration:none} a:hover{text-decoration:underline}
+  .wrap{max-width:1080px;margin:0 auto;padding:24px 16px 80px}
+  .nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+  .brand{font-weight:800;letter-spacing:.2px}
+  .pill{padding:8px 12px;border:1px solid var(--border);border-radius:999px;background:#0f1420;color:var(--muted);font-size:14px}
+  .grid{display:grid;gap:16px}
+  .cols-2{grid-template-columns:1.1fr .9fr}
+  .card{background:linear-gradient(180deg,#121621,#0d1017);border:1px solid var(--border);border-radius:16px;padding:20px}
+  h1{font-size:30px;margin:0 0 8px} h2{font-size:22px;margin:12px 0 8px}
+  h3{font-size:18px;margin:10px 0 6px}
+  p,li{color:var(--muted)} ul{margin:6px 0 0 18px} li{margin:6px 0}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  input,select,button,textarea{width:100%;padding:10px 12px;border-radius:10px;border:1px solid var(--border);background:#0f1420;color:var(--text)}
+  button{cursor:pointer;font-weight:700}
+  .btn{background:linear-gradient(180deg,#38d39f,#1fb77f);border-color:#2fae84;color:#06130e}
+  .btn.ghost{background:#121826;color:var(--text);border:1px solid var(--border)}
+  .muted{color:var(--muted)} .ok{color:#54d6a1} .bad{color:#ff6b6b}
+  .out{white-space:pre-wrap;background:#0e121a;border:1px solid var(--border);padding:12px;border-radius:12px;min-height:100px}
+  .tabs{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 16px}
+  .tab{padding:8px 12px;border:1px solid var(--border);background:#0f1420;border-radius:10px;cursor:pointer}
+  .tab.active{border-color:#2fae84;background:#14221b}
+  .hide{display:none}
+  canvas{width:100%;height:160px;background:#0f1420;border:1px solid var(--border);border-radius:10px}
+  .footer{margin-top:20px;border-top:1px solid var(--border);padding-top:10px;color:var(--muted);font-size:12px}
+  @media (max-width:960px){.cols-2{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="nav">
+    <div class="brand">EEG Tutor — Basic</div>
+    <span class="pill">Pure frontend • Free APIs • Educational only</span>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" data-tab="basics">Basics</button>
+    <button class="tab" data-tab="map">10–20 Map</button>
+    <button class="tab" data-tab="patterns">Patterns</button>
+    <button class="tab" data-tab="artifacts">Artifacts</button>
+    <button class="tab" data-tab="quiz">Quiz</button>
+    <button class="tab" data-tab="wiki">Wikipedia Lookup</button>
+  </div>
+
+  <!-- BASICS -->
+  <section id="basics" class="card">
+    <h2>What this does</h2>
+    <p>This lightweight tutor gives you: a quick EEG band classifier, a 10–20 clickable map, canonical patterns and common artifacts, a small quiz, and a Wikipedia summary lookup — all <strong>without any backend</strong>. Data stays in your browser.</p>
+    <div class="row">
+      <div>
+        <h3>Band Classifier</h3>
+        <label>Frequency (Hz)</label>
+        <input id="freq" type="number" step="0.1" value="10">
+        <div id="band" class="out"></div>
+      </div>
+      <div>
+        <h3>Wave Sandbox</h3>
+        <label>Amplitude (µV)</label>
+        <input id="amp" type="number" step="1" value="50">
+        <canvas id="wave"></canvas>
+      </div>
+    </div>
+    <p class="muted">Educational use only. Do not use to diagnose or treat patients.</p>
+  </section>
+
+  <!-- MAP -->
+  <section id="map" class="card hide">
+    <h2>10–20 Electrode Map (click a site)</h2>
+    <div id="mapWrap" style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <svg id="head" viewBox="0 0 300 360" style="width:100%;background:#0f1420;border:1px solid var(--border);border-radius:10px">
+        <defs><radialGradient id="g" cx="50%" cy="45%"><stop offset="0%" stop-color="#182033"/><stop offset="100%" stop-color="#0f1420"/></radialGradient></defs>
+        <ellipse cx="150" cy="170" rx="110" ry="140" fill="url(#g)" stroke="#242a36"/>
+        <!-- Points -->
+        <!-- Frontal pole -->
+        <circle class="el" data-id="Fp1" cx="105" cy="60" r="7" fill="#54d6a1"/><text x="90" y="55" fill="#9aa4b2" font-size="11">Fp1</text>
+        <circle class="el" data-id="Fp2" cx="195" cy="60" r="7" fill="#54d6a1"/><text x="200" y="55" fill="#9aa4b2" font-size="11">Fp2</text>
+        <!-- Frontal -->
+        <circle class="el" data-id="F7" cx="65" cy="115" r="6" fill="#89b4fa"/><text x="50" y="110" fill="#9aa4b2" font-size="11">F7</text>
+        <circle class="el" data-id="F3" cx="120" cy="110" r="6" fill="#89b4fa"/><text x="108" y="105" fill="#9aa4b2" font-size="11">F3</text>
+        <circle class="el" data-id="Fz" cx="150" cy="105" r="6" fill="#89b4fa"/><text x="153" y="100" fill="#9aa4b2" font-size="11">Fz</text>
+        <circle class="el" data-id="F4" cx="180" cy="110" r="6" fill="#89b4fa"/><text x="186" y="105" fill="#9aa4b2" font-size="11">F4</text>
+        <circle class="el" data-id="F8" cx="235" cy="115" r="6" fill="#89b4fa"/><text x="240" y="110" fill="#9aa4b2" font-size="11">F8</text>
+        <!-- Temporal / Central -->
+        <circle class="el" data-id="T7" cx="50" cy="180" r="6" fill="#f8bd7f"/><text x="35" y="175" fill="#9aa4b2" font-size="11">T7</text>
+        <circle class="el" data-id="C3" cx="115" cy="170" r="6" fill="#f8bd7f"/><text x="103" y="165" fill="#9aa4b2" font-size="11">C3</text>
+        <circle class="el" data-id="Cz" cx="150" cy="165" r="6" fill="#f8bd7f"/><text x="153" y="160" fill="#9aa4b2" font-size="11">Cz</text>
+        <circle class="el" data-id="C4" cx="185" cy="170" r="6" fill="#f8bd7f"/><text x="191" y="165" fill="#9aa4b2" font-size="11">C4</text>
+        <circle class="el" data-id="T8" cx="250" cy="180" r="6" fill="#f8bd7f"/><text x="255" y="175" fill="#9aa4b2" font-size="11">T8</text>
+        <!-- Parietal -->
+        <circle class="el" data-id="P7" cx="75" cy="225" r="6" fill="#e9a5c6"/><text x="60" y="220" fill="#9aa4b2" font-size="11">P7</text>
+        <circle class="el" data-id="P3" cx="125" cy="230" r="6" fill="#e9a5c6"/><text x="113" y="225" fill="#9aa4b2" font-size="11">P3</text>
+        <circle class="el" data-id="Pz" cx="150" cy="235" r="6" fill="#e9a5c6"/><text x="153" y="230" fill="#9aa4b2" font-size="11">Pz</text>
+        <circle class="el" data-id="P4" cx="175" cy="230" r="6" fill="#e9a5c6"/><text x="181" y="225" fill="#9aa4b2" font-size="11">P4</text>
+        <circle class="el" data-id="P8" cx="225" cy="225" r="6" fill="#e9a5c6"/><text x="230" y="220" fill="#9aa4b2" font-size="11">P8</text>
+        <!-- Occipital -->
+        <circle class="el" data-id="O1" cx="120" cy="290" r="7" fill="#54d6a1"/><text x="107" y="305" fill="#9aa4b2" font-size="11">O1</text>
+        <circle class="el" data-id="Oz" cx="150" cy="300" r="6" fill="#54d6a1"/><text x="153" y="315" fill="#9aa4b2" font-size="11">Oz</text>
+        <circle class="el" data-id="O2" cx="180" cy="290" r="7" fill="#54d6a1"/><text x="183" y="305" fill="#9aa4b2" font-size="11">O2</text>
+      </svg>
+      <div>
+        <div class="out" id="siteInfo">Click an electrode to see notes.</div>
+        <div class="row" style="margin-top:10px">
+          <input id="siteSearch" placeholder="Search a concept (e.g., 'alpha rhythm')">
+          <button id="wikiBtn" class="btn">Wikipedia summary</button>
+        </div>
+        <div id="wikiOut" class="out" style="margin-top:8px;min-height:60px"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PATTERNS -->
+  <section id="patterns" class="card hide">
+    <h2>Canonical Patterns</h2>
+    <ul>
+      <li><strong>Alpha (8–13 Hz):</strong> posterior dominant rhythm with eyes closed; attenuates on eye opening.</li>
+      <li><strong>Beta (13–30 Hz):</strong> low amplitude, frontal predominance; enhanced by benzodiazepines.</li>
+      <li><strong>Theta (4–8 Hz):</strong> normal in drowsiness; focal theta may suggest dysfunction.</li>
+      <li><strong>Delta (0.5–4 Hz):</strong> slow waves; focal delta often indicates structural lesion.</li>
+      <li><strong>Mu (8–12 Hz):</strong> central, arch‑shaped; blocked by contralateral hand movement.</li>
+      <li><strong>Spike‑and‑wave (≈3 Hz):</strong> generalized, absence epilepsy classic pattern.</li>
+      <li><strong>Photic driving:</strong> occipital response entrained to strobe frequency.</li>
+      <li><strong>Sleep spindles (12–15 Hz) & K‑complex:</strong> stage N2 markers.</li>
+    </ul>
+  </section>
+
+  <!-- ARTIFACTS -->
+  <section id="artifacts" class="card hide">
+    <h2>Common Artifacts</h2>
+    <ul>
+      <li><strong>Eye blink / movement:</strong> large frontal slow waves; check EOG channels and video.</li>
+      <li><strong>EMG (muscle):</strong> high‑frequency noise, jaw clench; ask for relaxation or adjust filters.</li>
+      <li><strong>ECG:</strong> periodic spike from cardiac activity; verify with ECG lead.</li>
+      <li><strong>Sweat / drift:</strong> slow baseline wander; improve skin prep, reduce heat.</li>
+      <li><strong>Electrode pop / bad contact:</strong> sudden high‑amplitude transients; re‑prep electrode.</li>
+      <li><strong>Line noise:</strong> 50/60 Hz sinusoid; check ground, use notch if appropriate.</li>
+    </ul>
+  </section>
+
+  <!-- QUIZ -->
+  <section id="quiz" class="card hide">
+    <h2>Quick Quiz</h2>
+    <div id="qBox" class="out"></div>
+    <div class="row" style="margin-top:10px">
+      <button id="ansA" class="btn ghost">A</button>
+      <button id="ansB" class="btn ghost">B</button>
+      <button id="ansC" class="btn ghost">C</button>
+      <button id="nextQ" class="btn">Next</button>
+    </div>
+    <div id="qStatus" class="muted" style="margin-top:8px"></div>
+  </section>
+
+  <!-- WIKIPEDIA -->
+  <section id="wiki" class="card hide">
+    <h2>Wikipedia Lookup</h2>
+    <p>Free, no‑key API: <code>https://en.wikipedia.org/api/rest_v1/page/summary/&lt;title&gt;</code>. Type a term and press Enter.</p>
+    <div class="row">
+      <input id="wq" placeholder="e.g., Electroencephalography">
+      <button id="wgo" class="btn">Search</button>
+    </div>
+    <div id="wout" class="out" style="margin-top:8px"></div>
+  </section>
+
+  <div class="footer">
+    © <span id="year"></span> EEG Tutor — Educational use only • No diagnosis or treatment. • Built as a pure frontend demo.
+  </div>
+</div>
+
+<script>
+// Tabs
+document.querySelectorAll('.tab').forEach(t=>{
+  t.addEventListener('click', ()=>{
+    document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+    document.querySelectorAll('section.card').forEach(s=>s.classList.add('hide'));
+    t.classList.add('active');
+    document.getElementById(t.dataset.tab).classList.remove('hide');
+  });
+});
+
+// Year
+document.getElementById('year').textContent = new Date().getFullYear();
+
+// Band classifier
+const bandOut = document.getElementById('band');
+function classifyBand(f){
+  if (isNaN(f) || f<=0) return 'Invalid frequency';
+  if (f < 0.5) return 'Infraslow';
+  if (f < 4)   return 'Delta (0.5–4 Hz)';
+  if (f < 8)   return 'Theta (4–8 Hz)';
+  if (f < 13)  return 'Alpha (8–13 Hz)';
+  if (f < 30)  return 'Beta (13–30 Hz)';
+  if (f < 80)  return 'Gamma (30–80 Hz)';
+  return 'High‑gamma (>80 Hz)';
+}
+function updateBand(){ bandOut.textContent = classifyBand(parseFloat(document.getElementById('freq').value)); }
+document.getElementById('freq').addEventListener('input', updateBand);
+updateBand();
+
+// Wave sandbox
+const canvas = document.getElementById('wave');
+const ctx = canvas.getContext('2d');
+function drawWave(){
+  const f = parseFloat(document.getElementById('freq').value)||10;
+  const amp = parseFloat(document.getElementById('amp').value)||50;
+  const w = canvas.width = canvas.clientWidth;
+  const h = canvas.height = canvas.clientHeight;
+  ctx.clearRect(0,0,w,h);
+  ctx.strokeStyle = '#54d6a1';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  for(let x=0;x<w;x++){
+    const t = x/w; // 0..1
+    const y = h/2 - Math.sin(2*Math.PI*(f* t)) * (amp/100) * (h*0.45);
+    if(x===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+  }
+  ctx.stroke();
+  ctx.strokeStyle = '#242a36';
+  ctx.beginPath();
+  ctx.moveTo(0,h/2); ctx.lineTo(w,h/2); ctx.stroke();
+}
+drawWave();
+document.getElementById('amp').addEventListener('input', drawWave);
+document.getElementById('freq').addEventListener('input', drawWave);
+
+// 10–20 map info
+const notes = {
+  "Fp1":"Frontal pole left — eye‑blink artifacts are prominent here.",
+  "Fp2":"Frontal pole right — symmetric to Fp1.",
+  "F7":"Inferior frontal (left) — language areas nearby; EMG common.",
+  "F3":"Mid‑frontal left — executive/attention networks.",
+  "Fz":"Midline frontal — helpful for frontal midline theta.",
+  "F4":"Mid‑frontal right.",
+  "F8":"Inferior frontal (right).",
+  "T7":"Temporal (posterior to ear, left) — auditory cortex vicinity.",
+  "C3":"Central left — sensorimotor hand area.",
+  "Cz":"Vertex — midline; movement artifacts possible.",
+  "C4":"Central right — sensorimotor hand area.",
+  "T8":"Temporal right.",
+  "P7":"Parietal left — visuospatial networks.",
+  "P3":"Parietal left, superior.",
+  "Pz":"Parietal midline.",
+  "P4":"Parietal right.",
+  "P8":"Parietal right, inferior.",
+  "O1":"Occipital left — alpha strongest with eyes closed.",
+  "Oz":"Occipital midline.",
+  "O2":"Occipital right — photic driving visible during IPS."
+};
+document.querySelectorAll('#head .el').forEach(n => {
+  n.addEventListener('click', () => {
+    const id = n.dataset.id;
+    const txt = `**${id}** — ${notes[id]||'No local note.'}`;
+    document.getElementById('siteInfo').textContent = txt;
+  });
+});
+
+// Wikipedia summary for a site/concept
+async function wikiSummary(title){
+  const url = 'https://en.wikipedia.org/api/rest_v1/page/summary/' + encodeURIComponent(title);
+  const res = await fetch(url, {headers:{"Accept":"application/json"}});
+  if(!res.ok) throw new Error('HTTP '+res.status);
+  const j = await res.json();
+  return (j.extract || 'No summary') + (j.content_urls?.desktop?.page ? `\n\nMore: ${j.content_urls.desktop.page}` : '');
+}
+
+// Map page lookup
+document.getElementById('wikiBtn').addEventListener('click', async () => {
+  const term = document.getElementById('siteSearch').value.trim() || '10–20 system (EEG)';
+  const out = document.getElementById('wikiOut');
+  out.textContent = 'Loading…';
+  try{
+    out.textContent = await wikiSummary(term);
+  }catch(e){
+    out.textContent = 'Failed to load (network/CORS). You can open Wikipedia manually for: ' + term;
+  }
+});
+
+// Standalone Wikipedia tab
+document.getElementById('wgo').addEventListener('click', async () => {
+  const term = document.getElementById('wq').value.trim() || 'Electroencephalography';
+  const out = document.getElementById('wout');
+  out.textContent = 'Loading…';
+  try{
+    out.textContent = await wikiSummary(term);
+  }catch(e){
+    out.textContent = 'Failed to load. Try again or open Wikipedia directly.';
+  }
+});
+
+// Quiz
+const quiz = [
+  {q:"Which band is 8–13 Hz?", a:["Theta","Alpha","Beta"], k:1, why:"Alpha rhythm is 8–13 Hz; posterior dominant with eyes closed."},
+  {q:"Eye blinks are most obvious at…", a:["Fp1/Fp2","O1/O2","C3/C4"], k:0, why:"Frontal poles capture corneo‑retinal dipole deflections."},
+  {q:"3 Hz generalized spike‑and‑wave is classic for…", a:["Absence epilepsy","Focal temporal epilepsy","Artifact"], k:0, why:"Typical absence seizures show ~3 Hz spike‑and‑wave."},
+  {q:"Line noise is usually at…", a:["50/60 Hz","0.5–4 Hz","4–8 Hz"], k:0, why:"Mains frequency contaminates traces at 50/60 Hz."}
+];
+let qi = 0, score = 0;
+function showQ(){
+  const item = quiz[qi];
+  document.getElementById('qBox').textContent = `Q${qi+1}/${quiz.length}: ${item.q}\nA) ${item.a[0]}\nB) ${item.a[1]}\nC) ${item.a[2]}`;
+  document.getElementById('qStatus').textContent = `Score: ${score}`;
+}
+['ansA','ansB','ansC'].forEach((id,idx)=>{
+  document.getElementById(id).addEventListener('click', ()=>{
+    const item = quiz[qi];
+    const ok = (idx === item.k);
+    score += ok?1:0;
+    document.getElementById('qStatus').innerHTML = (ok?'<span class="ok">Correct.</span> ':'<span class="bad">Wrong.</span> ')+item.why+` • Score: ${score}`;
+  });
+});
+document.getElementById('nextQ').addEventListener('click', ()=>{
+  qi = (qi+1) % quiz.length;
+  showQ();
+});
+showQ();
+</script>
+</body>
+</html>
