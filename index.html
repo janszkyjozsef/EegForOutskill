@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>EEG Tutor — Pro (No Backend)</title>
+<meta name="description" content="A comprehensive EEG tutoring app: bands, 10–20 map, artifacts, quiz, CSV import, simple spectrum — pure frontend, no backend.">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header class="nav">
+  <div class="brand">EEG Tutor — Pro</div>
+  <nav class="links">
+    <a href="#basics" class="tab-link active" data-tab="basics">Basics</a>
+    <a href="#map" class="tab-link" data-tab="map">10–20 Map</a>
+    <a href="#simulate" class="tab-link" data-tab="simulate">Simulate</a>
+    <a href="#artifacts" class="tab-link" data-tab="artifacts">Artifacts</a>
+    <a href="#quiz" class="tab-link" data-tab="quiz">Quiz</a>
+    <a href="#wiki" class="tab-link" data-tab="wiki">Wikipedia</a>
+  </nav>
+</header>
+
+<main class="wrap">
+  <!-- BASICS -->
+  <section id="basics" class="card tab show">
+    <h1>What this app does</h1>
+    <p>This is a **pure‑frontend** EEG tutor: band classifier, 10–20 map, signal sandbox, simple spectrum, artifact demos, Wikipedia lookups, and a 15‑item quiz. All runs in your browser. <strong>Educational only — not for diagnosis.</strong></p>
+    <div class="grid two">
+      <div>
+        <h2>Band Classifier</h2>
+        <label>Frequency (Hz)</label>
+        <input id="freq" type="number" step="0.1" value="10">
+        <div id="bandOut" class="out"></div>
+      </div>
+      <div>
+        <h2>Wave Sandbox</h2>
+        <label>Amplitude (µV)</label>
+        <input id="amp" type="number" step="1" value="50">
+        <canvas id="wave" height="180"></canvas>
+      </div>
+    </div>
+    <p class="muted small">Tip: Try 10 Hz alpha vs 20 Hz beta; adjust amplitude and see the difference.</p>
+  </section>
+
+  <!-- MAP -->
+  <section id="map" class="card tab">
+    <h1>10–20 Electrode Map</h1>
+    <div class="grid two">
+      <svg id="head" viewBox="0 0 300 360" class="head">
+        <defs><radialGradient id="g" cx="50%" cy="45%"><stop offset="0%" stop-color="#182033"/><stop offset="100%" stop-color="#0f1420"/></radialGradient></defs>
+        <ellipse cx="150" cy="170" rx="110" ry="140" fill="url(#g)" stroke="#242a36"/>
+        <!-- A subset of standard sites -->
+        <g id="sites" fill="#54d6a1">
+          <circle class="el" data-id="Fp1" cx="105" cy="60" r="7"/><text x="90" y="55">Fp1</text>
+          <circle class="el" data-id="Fp2" cx="195" cy="60" r="7"/><text x="200" y="55">Fp2</text>
+          <circle class="el" data-id="F7" cx="65" cy="115" r="6"/><text x="50" y="110">F7</text>
+          <circle class="el" data-id="F3" cx="120" cy="110" r="6"/><text x="108" y="105">F3</text>
+          <circle class="el" data-id="Fz" cx="150" cy="105" r="6"/><text x="153" y="100">Fz</text>
+          <circle class="el" data-id="F4" cx="180" cy="110" r="6"/><text x="186" y="105">F4</text>
+          <circle class="el" data-id="F8" cx="235" cy="115" r="6"/><text x="240" y="110">F8</text>
+          <circle class="el" data-id="T7" cx="50" cy="180" r="6"/><text x="35" y="175">T7</text>
+          <circle class="el" data-id="C3" cx="115" cy="170" r="6"/><text x="103" y="165">C3</text>
+          <circle class="el" data-id="Cz" cx="150" cy="165" r="6"/><text x="153" y="160">Cz</text>
+          <circle class="el" data-id="C4" cx="185" cy="170" r="6"/><text x="191" y="165">C4</text>
+          <circle class="el" data-id="T8" cx="250" cy="180" r="6"/><text x="255" y="175">T8</text>
+          <circle class="el" data-id="P7" cx="75" cy="225" r="6"/><text x="60" y="220">P7</text>
+          <circle class="el" data-id="P3" cx="125" cy="230" r="6"/><text x="113" y="225">P3</text>
+          <circle class="el" data-id="Pz" cx="150" cy="235" r="6"/><text x="153" y="230">Pz</text>
+          <circle class="el" data-id="P4" cx="175" cy="230" r="6"/><text x="181" y="225">P4</text>
+          <circle class="el" data-id="P8" cx="225" cy="225" r="6"/><text x="230" y="220">P8</text>
+          <circle class="el" data-id="O1" cx="120" cy="290" r="7"/><text x="107" y="305">O1</text>
+          <circle class="el" data-id="Oz" cx="150" cy="300" r="6"/><text x="153" y="315">Oz</text>
+          <circle class="el" data-id="O2" cx="180" cy="290" r="7"/><text x="183" y="305">O2</text>
+        </g>
+      </svg>
+      <div>
+        <div id="siteInfo" class="out">Click an electrode to see notes and typical findings.</div>
+        <div class="row" style="margin-top:10px">
+          <input id="siteSearch" placeholder="Search a concept (e.g., 'alpha rhythm')">
+          <button id="wikiBtn" class="btn">Wikipedia summary</button>
+        </div>
+        <div id="wikiOut" class="out" style="margin-top:8px;min-height:70px"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SIMULATE -->
+  <section id="simulate" class="card tab">
+    <h1>Signal Sandbox</h1>
+    <p>Mix basic rhythms and artifacts, import a CSV, and compute a <em>simple</em> spectrum (educational DFT — not clinical).</p>
+    <div class="grid two">
+      <div>
+        <h2>Synthesizer</h2>
+        <div class="row">
+          <label>Fs (Hz)<input id="fs" type="number" value="256"></label>
+          <label>Seconds<input id="secs" type="number" value="4"></label>
+        </div>
+        <div class="row">
+          <label>Alpha 10 Hz (µV)<input id="aAmp" type="number" value="50"></label>
+          <label>Beta 20 Hz (µV)<input id="bAmp" type="number" value="20"></label>
+        </div>
+        <div class="row">
+          <label>Noise (µV rms)<input id="nAmp" type="number" value="10"></label>
+          <label>Blink artifact (on/off)<select id="blink"><option>off</option><option>on</option></select></label>
+        </div>
+        <div class="row">
+          <button id="gen" class="btn">Generate</button>
+          <button id="dlCSV" class="btn ghost">Download CSV</button>
+        </div>
+        <canvas id="sig" height="150"></canvas>
+      </div>
+      <div>
+        <h2>Import & Spectrum</h2>
+        <label>Load CSV (one column of µV or time,µV)</label>
+        <input id="file" type="file" accept=".csv,text/csv">
+        <button id="spec" class="btn">Compute spectrum</button>
+        <canvas id="fft" height="150"></canvas>
+        <p class="small muted">DFT size is min(1024, N). Window: Hann. Result: |X(f)|.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ARTIFACTS -->
+  <section id="artifacts" class="card tab">
+    <h1>Common Artifacts</h1>
+    <ul>
+      <li><strong>Eye blink / movement:</strong> large frontal slow waves; check EOG channels and video.</li>
+      <li><strong>EMG (muscle):</strong> high‑frequency noise, jaw clench; ask for relaxation or adjust filters.</li>
+      <li><strong>ECG:</strong> periodic spikes from cardiac activity; verify with ECG lead.</li>
+      <li><strong>Sweat / drift:</strong> slow baseline wander; improve skin prep, reduce heat.</li>
+      <li><strong>Electrode pop / bad contact:</strong> sudden high‑amplitude transients; re‑prep electrode.</li>
+      <li><strong>Line noise:</strong> 50/60 Hz sinusoid; check ground, use notch if appropriate.</li>
+    </ul>
+  </section>
+
+  <!-- QUIZ -->
+  <section id="quiz" class="card tab">
+    <h1>EEG Quiz (15 items)</h1>
+    <div id="qBox" class="out"></div>
+    <div class="row" style="margin-top:10px">
+      <button id="ansA" class="btn ghost">A</button>
+      <button id="ansB" class="btn ghost">B</button>
+      <button id="ansC" class="btn ghost">C</button>
+      <button id="ansD" class="btn ghost">D</button>
+      <button id="nextQ" class="btn">Next</button>
+    </div>
+    <div id="qStatus" class="muted" style="margin-top:8px"></div>
+  </section>
+
+  <!-- WIKIPEDIA -->
+  <section id="wiki" class="card tab">
+    <h1>Wikipedia Lookup</h1>
+    <p>Free, no‑key API: <code>https://en.wikipedia.org/api/rest_v1/page/summary/&lt;title&gt;</code>. Type a term and press Search.</p>
+    <div class="row">
+      <input id="wq" placeholder="Electroencephalography">
+      <button id="wgo" class="btn">Search</button>
+    </div>
+    <div id="wout" class="out" style="margin-top:8px"></div>
+  </section>
+</main>
+
+<footer class="footer">
+  © <span id="year"></span> EEG Tutor — Pro • Educational use only • No diagnosis or treatment. • Pure frontend.
+</footer>
+
+<script src="app.js"></script>
+</body>
+</html>

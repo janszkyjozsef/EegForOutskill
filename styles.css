@@ -1,0 +1,26 @@
+:root{--bg:#0f1115;--card:#151923;--text:#e6e9ef;--muted:#9aa4b2;--accent:#54d6a1;--border:#242a36}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Inter,Roboto,Ubuntu,Helvetica,Arial,sans-serif}
+a{color:var(--accent);text-decoration:none}a:hover{text-decoration:underline}
+.wrap{max-width:1080px;margin:0 auto;padding:24px 16px 80px}
+.nav{position:sticky;top:0;z-index:10;background:rgba(15,17,21,.9);backdrop-filter:blur(8px);display:flex;justify-content:space-between;align-items:center;padding:10px 16px;border-bottom:1px solid var(--border)}
+.brand{font-weight:800}
+.links a{margin-left:10px;padding:6px 10px;border:1px solid var(--border);border-radius:8px;background:#0f1420}
+.links a.active{border-color:#2fae84;background:#14221b}
+.card{background:linear-gradient(180deg,#121621,#0d1017);border:1px solid var(--border);border-radius:16px;padding:20px;margin-top:16px}
+.grid.two{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media (max-width:960px){.grid.two{grid-template-columns:1fr}}
+h1{margin:6px 0 10px;font-size:26px;line-height:1.2}
+h2{margin:6px 0 6px;font-size:20px}
+label{display:block;margin:6px 0;color:var(--muted)}
+input,select,button{width:100%;padding:9px 12px;border-radius:10px;border:1px solid var(--border);background:#0f1420;color:var(--text)}
+button{cursor:pointer;font-weight:700}
+.btn{background:linear-gradient(180deg,#38d39f,#1fb77f);border-color:#2fae84;color:#06130e}
+.btn.ghost{background:#121826;color:var(--text)}
+.out{white-space:pre-wrap;background:#0e121a;border:1px solid var(--border);padding:12px;border-radius:12px;min-height:80px}
+.small{font-size:12px}
+.muted{color:var(--muted)}
+.head{width:100%;background:#0f1420;border:1px solid var(--border);border-radius:10px}
+.tab{display:none}.tab.show{display:block}
+.footer{border-top:1px solid var(--border);padding:12px 16px;color:var(--muted);font-size:12px;text-align:center}
+canvas{width:100%;background:#0f1420;border:1px solid var(--border);border-radius:10px}

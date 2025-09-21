@@ -1,0 +1,15 @@
+{
+  "name": "EEG Tutor \u2014 Pro",
+  "short_name": "EEG Tutor",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#0f1115",
+  "theme_color": "#0f1115",
+  "icons": [
+    {
+      "src": "assets/favicon.svg",
+      "sizes": "64x64",
+      "type": "image/svg+xml"
+    }
+  ]
+}
